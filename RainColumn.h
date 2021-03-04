@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 
+// width and height of a single sign in pixels
 const int wsign = 10, hsign = 15;
 
 class RainColumn
@@ -28,9 +29,6 @@ public:
 			signs[states_counter % length].setTexture(*signs_texture);
 			signs[states_counter % length].setTextureRect(sf::IntRect(wsign * (rand() % hsign), 0, wsign, hsign));
 			signs[states_counter % length].setPosition(wsign * row, hsign * states_counter);
-
-			// To highlight the head sign
-			signs[states_counter % length].setColor(sf::Color::White);
 
 			// Restore the usual color of previous head sign
 			if (states_counter)
@@ -65,6 +63,9 @@ public:
 			{
 				signs[rand() % length].setTextureRect(sf::IntRect(wsign * (rand() % hsign), 0, wsign, hsign));
 			}
+		
+			// To highlight the head sign
+			signs[states_counter % length].setColor(sf::Color::White);
 		}
 
 		return ++states_counter < states_number;
