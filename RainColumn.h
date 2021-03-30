@@ -20,6 +20,8 @@ public:
 
 		states_counter = -delay;
 		states_number = 2 * (height + 1);
+
+		silence = false;
 	}
 
 	bool update()
@@ -89,11 +91,31 @@ public:
 		signs_texture = texture;
 	}
 
-	bool was_used()
+	/*bool was_used()
+	{
+		return states_number;
+	}*/
+
+	bool is_active()
 	{
 		return states_number;
 	}
 
+	void deactivate()
+	{
+		silence = false;
+		states_number = 0;
+		states_counter = -1; // to prevent drawing (just in case)
+	}
+
+	// Has the last sign in column moved from zero position (top of the screen)
+	bool is_clear()
+	{
+		if (silence)
+			return false;
+
+		return silence = (states_counter > length);
+	}
 
 	int get_row()
 	{
@@ -112,6 +134,9 @@ public:
 private:
 	sf::Sprite *signs = nullptr; // size of Sprite = 272; TODO: try alloc-realloc, or max alloc strategies.
 	const sf::Texture *signs_texture = nullptr;
+
+	// is_clear() should true only once
+	bool silence = false;
 
 	int states_counter = 0;
 	int states_number = 0;
