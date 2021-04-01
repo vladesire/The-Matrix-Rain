@@ -120,162 +120,6 @@ public:
 				}
 			}
 		}
-
-
-		/*for (size_t i = 0; i < raincols; ++i)
-		{
-
-			if (cols[i].is_active())
-			{
-				if (cols[i].is_clear())
-				{
-					free_cols.push_back(cols[i].get_row());
-
-					if (is_printing)
-					{
-						while (!free_cols.empty())
-						{
-							// Check if front position is in text_meta
-							// if not, skip one cycle (break)
-
-							if (is_col_to_draw(free_cols.front()))
-							{
-								if (!free_rain_cols.empty())
-								{
-									int col = free_rain_cols.front();
-									free_rain_cols.pop_front();
-
-									int id = meta_id(free_cols.front());
-
-									// TODO: height (?), length(?)
-									cols[col].reset(free_cols.front(), height, height / 2, 0, text_meta[id][1]);
-
-									text_meta[id][2] = 1;
-									text_meta[id][4] = col;
-
-									free_cols.pop_front();
-								}
-								else
-								{
-									break;
-								}
-							}
-							else
-							{
-								goto NOT_USED_IN_PRINTING;
-							}
-
-						}
-					}
-					else
-					{
-						NOT_USED_IN_PRINTING:
-						// If no RainColumn available, then let it be
-						if (!free_rain_cols.empty())
-						{
-							cols[free_rain_cols.front()].reset(free_cols.front(), height, height / 2 + (rand() % 5), rand() % 35);
-							//cols[free_rain_cols.front()].reset(free_cols.front(), height, height / 4, rand() % (height / 8));
-							free_rain_cols.pop_front();
-							free_cols.pop_front();
-						}
-					}
-
-				}
-				else if (!cols[i].update())
-				{
-					// Check if letter columns are done
-					if (is_printing)
-					{
-						int id = assigned_id(i);
-
-						if (id != -1)
-						{
-							text_meta[id][2] = 0;
-							text_meta[id][3] = 1;
-						}
-						else
-						{
-							goto NOT_ASSIGNED;
-						}
-					}
-					else
-					{
-						NOT_ASSIGNED:
-
-						// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-
-						if (is_printing)
-						{
-							while (!free_cols.empty())
-							{
-								// Check if front position is in text_meta
-								// if not, skip one cycle (break)
-
-								if (is_col_to_draw(free_cols.front()))
-								{
-									if (!free_rain_cols.empty())
-									{
-										int col = i;
-
-										int id = meta_id(free_cols.front());
-
-										// TODO: height (?), length(?)
-										cols[col].reset(free_cols.front(), height, height / 2, 0, text_meta[id][1]);
-
-										text_meta[id][2] = 1;
-										text_meta[id][4] = col;
-
-										free_cols.pop_front();
-									}
-									else
-									{
-										break;
-									}
-								}
-								else
-								{
-									goto NOT_USED_IN_PRINTING_2;
-								}
-
-							}
-						}
-						else
-						{
-							NOT_USED_IN_PRINTING_2:
-
-							if (!free_cols.empty())
-							{
-
-								// TODO: somewhere here XXX---XXX---XXX---XXX
-
-
-
-								cols[i].reset(free_cols.front(), height, height / 2 + (rand() % 5), rand() % 35);
-								//cols[i].reset(free_cols.front(), height, height / 4, rand() % (height / 8));
-								free_cols.pop_front();
-							}
-							else
-							{
-								free_rain_cols.push_back(i);
-								cols[i].deactivate();
-							}
-
-						}
-						// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-
-					}
-					
-				}
-
-
-
-				cols[i].draw(window);
-
-			}
-
-			//std::cout << "p: " << free_cols.size() << " r: " << free_rain_cols.size() << "\n";
-
-		}*/
 	}
 
 	~TheMatrix()
@@ -306,8 +150,6 @@ public:
 		to_stop_printing = false;
 		text_meta.clear();
 
-		std::cout << "He set me free... " << text << "\n";
-
 		int pos = width / 2 - text.length() / 2; // init position TODO: centralize
 
 		for (auto &i : text)
@@ -316,9 +158,11 @@ public:
 			{
 				++pos;
 			}
-
-			text_meta.emplace_back();
-			text_meta.back() = {pos++, i - 'A', 0, 0};
+			else
+			{
+				text_meta.emplace_back();
+				text_meta.back() = {pos++, i - 'A', 0, 0};
+			}
 		}
 
 		delete[] char_cols;
@@ -329,8 +173,6 @@ public:
 			char_cols[i].set_texture(&signs_texture);
 			char_cols[i].set_alphabet(&alphabet);
 		}
-
-		std::cout << "It is done\n";
 	}
 
 private:
@@ -352,7 +194,6 @@ private:
 	// 1: char code (A - 0, B - 1, C - 2 ...)
 	// 2: true/false, is being drawn
 	// 3: true/false, is done
-	//----- 4: id of assigned rain column
 	std::vector<std::array<int, 4>> text_meta;
 
 

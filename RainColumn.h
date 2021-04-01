@@ -8,9 +8,6 @@
 // width and height of a single sign in pixels
 const int wsign = 10, hsign = 15;
 
-// TODO: char color : (189,255,228)   It's from the matrix opening
-
-
 class RainColumn
 {
 public:
@@ -21,12 +18,10 @@ public:
 		is_char = false;
 		signs = new sf::Sprite[length];
 
+		// This column will be used to print a letter from the string
 		if (ch != -1)
 		{
-			// Handle it differently
-			//std::cout << "Character assigned: " << ch << "\n";
 			is_char = true;
-	
 			char_code = ch;
 			char_pos = height / 2;		
 		}
@@ -55,7 +50,6 @@ public:
 				signs[(states_counter - 1) % length].setTextureRect(sf::IntRect(char_code * wsign, 0, wsign, hsign));
 				signs[(states_counter - 1) % length].setPosition(wsign * row, hsign * (char_pos-1));
 
-				// TODO: Add code that will start to spawn column from the top; and will stop by the letter
 
 			}
 			else

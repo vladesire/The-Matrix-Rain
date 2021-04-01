@@ -11,7 +11,7 @@ int main()
 #ifdef NDEBUG
 	sf::RenderWindow window {sf::VideoMode::getDesktopMode(), "The Matrix Rain", sf::Style::Fullscreen};
 #else
-	sf::RenderWindow window {sf::VideoMode(900, 600), "The Matrix Rain", sf::Style::Close};
+	sf::RenderWindow window {sf::VideoMode(960, 540), "The Matrix Rain", sf::Style::Close};
 #endif // NDEBUG
 
 	window.setMouseCursorVisible(false);
@@ -99,7 +99,6 @@ int main()
 		{
 			if (is_free && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Tilde)
 			{
-				std::cout << "Ready to read string\n";
 				to_read = true;
 				text.clear();
 				window.pollEvent(event); // Not to add tilde sign to the string
@@ -110,13 +109,15 @@ int main()
 			}
 			else if (to_read && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
 			{
-				std::cout << "String discarded\n";
 				to_read = false;
 			}
 			else if (to_read && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter)
 			{
-				thematrix.set_string(text);
-				thematrix.print_string();
+				if (!text.empty())
+				{
+					thematrix.set_string(text);
+					thematrix.print_string();
+				}
 							
 				to_read = false;
 			}
@@ -126,7 +127,6 @@ int main()
 				if (text.size() > 0)
 				{
 					text.pop_back();
-					std::cout << text << "\n";
 				}
 
 				window.pollEvent(event); // Backspace also created TextEntered event
@@ -140,7 +140,6 @@ int main()
 					if (isalpha(ch) || isspace(ch))
 					{
 						text += toupper(ch);
-						std::cout << text << "\n";
 					}
 				}
 			}
