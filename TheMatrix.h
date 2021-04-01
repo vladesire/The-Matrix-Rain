@@ -5,6 +5,9 @@
 #include <queue>
 
 #include <iostream>
+#include <string>
+#include <vector>
+#include <array>
 
 class TheMatrix
 {
@@ -19,10 +22,12 @@ public:
 		cols = new RainColumn[raincols];
 
 		signs_texture.loadFromFile("signs.png");
+		alphabet.loadFromFile("alphabet.png");
 
 		for (int i = 0; i < raincols; ++i)
 		{
 			cols[i].set_texture(&signs_texture);
+			cols[i].set_alphabet(&alphabet);
 			free_rain_cols.push_back(i);
 		}
 
@@ -40,35 +45,224 @@ public:
 
 	void draw(sf::RenderWindow &window)
 	{
+		if (is_printing)
+		{
+			// Not to affect performance when printing is not used at all
+			is_printing = !is_printing_over();
+
+			if (!is_printing)
+			{
+				// Release all physical columns
+				
+				for (size_t i = 0; i < text_meta.size(); ++i)
+				{
+					free_cols.push_back(text_meta[i][0]);
+				}
+
+			}
+			else
+			{
+				// Update & Draw
+				for (size_t i = 0; i < text_meta.size(); ++i)
+				{
+					if (char_cols[i].is_active())
+					{
+						if (!text_meta[i][3] && !char_cols[i].update())
+						{
+							text_meta[i][2] = 0; // Is being drawn = false
+							text_meta[i][3] = 1; // Is finished = true
+						}
+
+						// Draw it anyway
+						char_cols[i].draw(window);
+					}
+				}
+			}
+		}
+
+
 		for (size_t i = 0; i < raincols; ++i)
 		{
+			// Update & Draw
+			if (cols[i].is_active())
+			{
+				if (cols[i].is_clear())
+				{
+					free_cols.push_back(cols[i].get_row());
+				}
+				else if (!cols[i].update())
+				{
+					free_rain_cols.push_back(i);
+					cols[i].deactivate();
+				}
+
+				cols[i].draw(window);
+			}
+
+			// Spawn 
+			if (!free_cols.empty())
+			{
+				if (is_printing && is_col_to_draw(free_cols.front()))
+				{
+					int id = meta_id(free_cols.front());
+					
+					text_meta[id][2] = 1; // Is being drawn = true
+
+					char_cols[id].reset(free_cols.front(), height, height / 2 + (rand() % 5), 0, text_meta[id][1]);
+					free_cols.pop_front();
+
+				}
+				else if (!free_rain_cols.empty())
+				{
+					cols[free_rain_cols.front()].reset(free_cols.front(), height, height / 2 + (rand() % 5), rand() % 35);
+					free_rain_cols.pop_front();
+					free_cols.pop_front();
+				}
+			}
+		}
+
+
+		/*for (size_t i = 0; i < raincols; ++i)
+		{
+
 			if (cols[i].is_active())
 			{
 				if (cols[i].is_clear())
 				{
 					free_cols.push_back(cols[i].get_row());
 
-					// If no RainColumn available, then let it be
-					if (!free_rain_cols.empty())
+					if (is_printing)
 					{
-						cols[free_rain_cols.front()].reset(free_cols.front(), height, height / 2 + (rand() % 5), rand() % 35);
-						//cols[free_rain_cols.front()].reset(free_cols.front(), height, height / 4, rand() % (height / 8));
-						free_rain_cols.pop_front();
-						free_cols.pop_front();
-					}
-				}
-				else if (!cols[i].update())
-				{
-					if (!free_cols.empty())
-					{
-						cols[i].reset(free_cols.front(), height, height / 2 + (rand() % 5), rand() % 35);
-						//cols[i].reset(free_cols.front(), height, height / 4, rand() % (height / 8));
-						free_cols.pop_front();
+						while (!free_cols.empty())
+						{
+							// Check if front position is in text_meta
+							// if not, skip one cycle (break)
+
+							if (is_col_to_draw(free_cols.front()))
+							{
+								if (!free_rain_cols.empty())
+								{
+									int col = free_rain_cols.front();
+									free_rain_cols.pop_front();
+
+									int id = meta_id(free_cols.front());
+
+									// TODO: height (?), length(?)
+									cols[col].reset(free_cols.front(), height, height / 2, 0, text_meta[id][1]);
+
+									text_meta[id][2] = 1;
+									text_meta[id][4] = col;
+
+									free_cols.pop_front();
+								}
+								else
+								{
+									break;
+								}
+							}
+							else
+							{
+								goto NOT_USED_IN_PRINTING;
+							}
+
+						}
 					}
 					else
 					{
-						free_rain_cols.push_back(i);
-						cols[i].deactivate();
+						NOT_USED_IN_PRINTING:
+						// If no RainColumn available, then let it be
+						if (!free_rain_cols.empty())
+						{
+							cols[free_rain_cols.front()].reset(free_cols.front(), height, height / 2 + (rand() % 5), rand() % 35);
+							//cols[free_rain_cols.front()].reset(free_cols.front(), height, height / 4, rand() % (height / 8));
+							free_rain_cols.pop_front();
+							free_cols.pop_front();
+						}
+					}
+
+				}
+				else if (!cols[i].update())
+				{
+					// Check if letter columns are done
+					if (is_printing)
+					{
+						int id = assigned_id(i);
+
+						if (id != -1)
+						{
+							text_meta[id][2] = 0;
+							text_meta[id][3] = 1;
+						}
+						else
+						{
+							goto NOT_ASSIGNED;
+						}
+					}
+					else
+					{
+						NOT_ASSIGNED:
+
+						// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+						if (is_printing)
+						{
+							while (!free_cols.empty())
+							{
+								// Check if front position is in text_meta
+								// if not, skip one cycle (break)
+
+								if (is_col_to_draw(free_cols.front()))
+								{
+									if (!free_rain_cols.empty())
+									{
+										int col = i;
+
+										int id = meta_id(free_cols.front());
+
+										// TODO: height (?), length(?)
+										cols[col].reset(free_cols.front(), height, height / 2, 0, text_meta[id][1]);
+
+										text_meta[id][2] = 1;
+										text_meta[id][4] = col;
+
+										free_cols.pop_front();
+									}
+									else
+									{
+										break;
+									}
+								}
+								else
+								{
+									goto NOT_USED_IN_PRINTING_2;
+								}
+
+							}
+						}
+						else
+						{
+							NOT_USED_IN_PRINTING_2:
+
+							if (!free_cols.empty())
+							{
+
+								// TODO: somewhere here XXX---XXX---XXX---XXX
+
+
+
+								cols[i].reset(free_cols.front(), height, height / 2 + (rand() % 5), rand() % 35);
+								//cols[i].reset(free_cols.front(), height, height / 4, rand() % (height / 8));
+								free_cols.pop_front();
+							}
+							else
+							{
+								free_rain_cols.push_back(i);
+								cols[i].deactivate();
+							}
+
+						}
+						// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
 					}
 					
 				}
@@ -81,21 +275,90 @@ public:
 
 			//std::cout << "p: " << free_cols.size() << " r: " << free_rain_cols.size() << "\n";
 
-		}
+		}*/
 	}
 
 	~TheMatrix()
 	{
 		delete[] cols;
+		delete[] char_cols;
+	}
+
+	// No string is being shown
+	bool is_free()
+	{
+		return !is_printing;
+	}
+
+	void set_string(const std::string &str)
+	{
+		text = str;
+	}
+
+	void stop_printing()
+	{
+		to_stop_printing = true;
+	}
+
+	void print_string()
+	{
+		is_printing = true;
+		to_stop_printing = false;
+		text_meta.clear();
+
+		std::cout << "He set me free... " << text << "\n";
+
+		int pos = width / 2 - text.length() / 2; // init position TODO: centralize
+
+		for (auto &i : text)
+		{
+			if (i == ' ')
+			{
+				++pos;
+			}
+
+			text_meta.emplace_back();
+			text_meta.back() = {pos++, i - 'A', 0, 0};
+		}
+
+		delete[] char_cols;
+		char_cols = new RainColumn[text_meta.size()];
+
+		for (int i = 0; i < text_meta.size(); ++i)
+		{
+			char_cols[i].set_texture(&signs_texture);
+			char_cols[i].set_alphabet(&alphabet);
+		}
+
+		std::cout << "It is done\n";
 	}
 
 private:
 	unsigned int width, height; // in blocks
 	unsigned int raincols; // number of RainColumn instances in array
 	RainColumn *cols;
+
+	RainColumn *char_cols = nullptr; // Special columns used solely for printing a string
+
 	sf::Texture signs_texture;
+	sf::Texture alphabet;
+
+	std::string text;
+	
+	bool is_printing = false;
+	bool to_stop_printing = false;
+
+	// 0: physical column position
+	// 1: char code (A - 0, B - 1, C - 2 ...)
+	// 2: true/false, is being drawn
+	// 3: true/false, is done
+	//----- 4: id of assigned rain column
+	std::vector<std::array<int, 4>> text_meta;
+
+
 
 	// Time of column's full cycle is not equal for each one. Queue is needed for syncronization.
+	// TODO: Refactor names
 	std::deque<int> free_cols; // physical columns
 	std::deque<int> free_rain_cols; // instances of RainColumn.
 
@@ -106,6 +369,47 @@ private:
 			free_cols.push_back(i);
 		}
 	}
+	
+
+	int meta_id(int col)
+	{
+		int counter = 0;
+		for (auto &i : text_meta)
+		{
+			if (col == i[0])
+			{
+				return counter;
+			}
+
+			++counter;
+		}
+	}
+
+	bool is_col_to_draw(int col)
+	{
+		for (auto &i : text_meta)
+		{
+			if (col == i[0] && !i[2] && !i[3])
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	bool is_printing_over()
+	{
+		bool res = true;
+
+		for (auto &i : text_meta)
+		{
+			res = res && i[3];
+		}
+
+		return res && to_stop_printing;
+	}
+
 };
 
 

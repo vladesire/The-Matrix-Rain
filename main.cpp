@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <fstream>
+#include <cctype>
 
 int main()
 {
@@ -70,9 +71,12 @@ int main()
 	drawable_text.setFont(font);
 	drawable_text.setPosition(15, WIN_Y / 4 + prompt.getGlobalBounds().height * 1.5);
 
+
 	while (window.isOpen())
 	{
 		start_time = std::chrono::system_clock::now();
+
+		bool is_free = thematrix.is_free();
 
 		window.clear(sf::Color(1, 9, 2));
 		
@@ -93,12 +97,16 @@ int main()
 
 		while (window.pollEvent(event))
 		{
-			if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Tilde)
+			if (is_free && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Tilde)
 			{
 				std::cout << "Ready to read string\n";
 				to_read = true;
 				text.clear();
 				window.pollEvent(event); // Not to add tilde sign to the string
+			}
+			else if (!is_free && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
+			{
+				thematrix.stop_printing();
 			}
 			else if (to_read && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
 			{
@@ -107,8 +115,9 @@ int main()
 			}
 			else if (to_read && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter)
 			{
-				// TODO: Validate string, only English letters can be accepted; also, capitalize it. 
-				std::cout << "String accepted\n";
+				thematrix.set_string(text);
+				thematrix.print_string();
+							
 				to_read = false;
 			}
 			else if (to_read && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Backspace)
@@ -126,8 +135,13 @@ int main()
 			{
 				if (text.size() < char_limit)
 				{
-					text += event.text.unicode;
-					std::cout << text << "\n";
+					auto ch = event.text.unicode;
+					
+					if (isalpha(ch) || isspace(ch))
+					{
+						text += toupper(ch);
+						std::cout << text << "\n";
+					}
 				}
 			}
 			if (!esc_lock && event.type == sf::Event::Closed)
