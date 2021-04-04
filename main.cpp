@@ -8,11 +8,7 @@
 
 int main()
 {
-#ifdef NDEBUG
 	sf::RenderWindow window {sf::VideoMode::getDesktopMode(), "The Matrix Rain", sf::Style::Fullscreen};
-#else
-	sf::RenderWindow window {sf::VideoMode(960, 540), "The Matrix Rain", sf::Style::Close};
-#endif // NDEBUG
 
 	window.setMouseCursorVisible(false);
 
@@ -115,8 +111,7 @@ int main()
 			{
 				if (!text.empty())
 				{
-					thematrix.set_string(text);
-					thematrix.print_string();
+					thematrix.print_string(text);
 				}
 							
 				to_read = false;
@@ -163,6 +158,7 @@ int main()
 			}
 			else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F10)
 			{
+				// Quick exit from The Matrix
 				window.close();
 			}
 		}
@@ -177,8 +173,14 @@ int main()
 			}
 		}
 
-		if ((sf::Keyboard::isKeyPressed(sf::Keyboard::M) && sf::Keyboard::isKeyPressed(sf::Keyboard::A) && sf::Keyboard::isKeyPressed(sf::Keyboard::T) && sf::Keyboard::isKeyPressed(sf::Keyboard::R) && sf::Keyboard::isKeyPressed(sf::Keyboard::I) && sf::Keyboard::isKeyPressed(sf::Keyboard::X)))
+		if ((sf::Keyboard::isKeyPressed(sf::Keyboard::M) && 
+		     sf::Keyboard::isKeyPressed(sf::Keyboard::A) && 
+			 sf::Keyboard::isKeyPressed(sf::Keyboard::T) && 
+			 sf::Keyboard::isKeyPressed(sf::Keyboard::R) && 
+			 sf::Keyboard::isKeyPressed(sf::Keyboard::I) && 
+			 sf::Keyboard::isKeyPressed(sf::Keyboard::X)))
 		{
+			// Slow but true exit from The Matrix
 			window.close();
 		}
 
