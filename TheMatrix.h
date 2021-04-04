@@ -1,72 +1,60 @@
 #ifndef THEMATRIX_H_
 #define THEMATRIX_H_
 
+#include <SFML/Graphics.hpp>
 #include "RainColumn.h"
+#include <string>
+#include <vector>
+#include <array>
 #include <queue>
 
 class TheMatrix
 {
 public:
 
-	TheMatrix(unsigned int width, unsigned int height)
-	{
-		this->width = width / wsign;
-		this->height = height / hsign;
+	TheMatrix(unsigned int width, unsigned int height);
+	~TheMatrix();
 
-		cols = new RainColumn[this->width];
+	void draw(sf::RenderWindow &window);
 
-		signs_texture.loadFromFile("signs.png");
+	void print_string(const std::string &str);
+	void stop_printing();
 
-		for (int i = 0; i < this->width; ++i)
-		{
-			cols[i].set_texture(&signs_texture);
-		}
-
-		fill_cols();
-	}
-
-	void draw(sf::RenderWindow &window)
-	{
-		for (size_t i = 0; i < width; i++)
-		{
-			if (!cols[i].was_used())
-			{
-				cols[i].reset(free_cols.front(), height, height / 2 + (rand() % 15), rand() % 45);
-				free_cols.pop_front();
-
-			}
-			else if (!cols[i].update())
-			{
-				free_cols.push_back(cols[i].get_row());
-				cols[i].reset(free_cols.front(), height, height / 2 + (rand() % 15), rand() % 45);
-				free_cols.pop_front();
-			}
-
-			cols[i].draw(window);
-
-		}
-	}
-
-	~TheMatrix()
-	{
-		delete[] cols;
-	}
-
+	// No string is being shown
+	bool is_free();
+	
 private:
-	unsigned int width, height; // in blocks
+	unsigned int width, height; // in sign sizes
+
+	unsigned int raincols; // number of RainColumn instances in array
 	RainColumn *cols;
+
 	sf::Texture signs_texture;
-
+	sf::Texture alphabet;
+	
 	// Time of column's full cycle is not equal for each one. Queue is needed for syncronization.
-	std::deque<int> free_cols;
+	std::deque<int> free_cols; // physical columns
+	std::deque<int> free_rain_cols; // instances of RainColumn.
 
-	void fill_cols()
-	{
-		for (size_t i = 0; i < width; i++)
-		{
-			free_cols.push_back(i);
-		}
-	}
+	void fill_cols();
+	
+	// --- String printing ---
+
+	// 0: Physical column position.
+	// 1: Char code - alphabet offset (A - 0, B - 1 ...).
+	// 2: Is being drawn: true/false. False if it is done, or it has not started yet.
+	// 3: Is done: true/false.
+	std::vector<std::array<int, 4>> text_meta;
+
+	// Dedicated RainColumns; Each is directly connected with text_meta
+	RainColumn *char_cols = nullptr; 
+
+	bool is_printing = false;
+	bool to_stop_printing = false;
+
+	bool is_col_to_draw(int col);
+	bool is_printing_over();
+	int meta_id(int col);
 };
 
 
